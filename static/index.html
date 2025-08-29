@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis API - Test Interface</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .result-positive {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            border: 2px solid #4caf50;
+            color: #1b5e20;
+        }
+
+        .result-negative {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            border: 2px solid #f44336;
+            color: #b71c1c;
+        }
+
+        .result-loading {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border: 2px solid #ff9800;
+            color: #e65100;
+        }
+
+        .result-error {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border: 2px solid #e91e63;
+            color: #880e4f;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: rgba(255,255,255,0.8);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .json-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            display: none;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .links a {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 10px 20px;
+            color: #667eea;
+            text-decoration: none;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .model-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .model-info code {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Sentiment Analysis API</h1>
+        <p class="subtitle">Analysez le sentiment de vos textes avec DistilBERT</p>
+        
+        <div class="model-info">
+            <strong>Modèle utilisé:</strong> <code>distilbert-base-uncased-finetuned-sst-2-english</code>
+        </div>
+
+        <form id="sentimentForm">
+            <div class="form-group">
+                <label for="textInput">Texte à analyser :</label>
+                <textarea 
+                    id="textInput" 
+                    placeholder="Entrez votre texte en anglais ici... 
+Par exemple: 'I love this product!' ou 'This movie was terrible.'"
+                    maxlength="5000"
+                ></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary" id="analyzeBtn">
+                    🔍 Analyser
+                </button>
+                <button type="button" class="btn-secondary" onclick="clearForm()">
+                    🗑️ Effacer
+                </button>
+                <button type="button" class="btn-secondary" onclick="toggleJson()">
+                    📋 JSON
+                </button>
+            </div>
+        </form>
+
+        <div id="result" class="result"></div>
+        <div id="jsonDisplay" class="json-display"></div>
+
+        <div class="links">
+            <a href="/docs" target="_blank">📚 Documentation API</a>
+            <a href="/health" target="_blank">❤️ Health Check</a>
+            <a href="/models" target="_blank">🤖 Info Modèle</a>
+        </div>
+    </div>
+
+    <script>
+        let lastResponse = null;
+
+        document.getElementById('sentimentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await analyzeSentiment();
+        });
+
+        async function analyzeSentiment() {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+            const resultDiv = document.getElementById('result');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+
+            if (!text) {
+                showResult('Veuillez entrer un texte à analyser.', 'error');
+                return;
+            }
+
+            // État de chargement
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '⏳ Analyse...';
+            showResult('🔄 Analyse en cours...', 'loading');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                lastResponse = data;
+
+                if (response.ok) {
+                    showSentimentResult(data);
+                    updateJsonDisplay(data);
+                } else {
+                    showResult(`❌ Erreur: ${data.detail}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                showResult('❌ Erreur de connexion à l\'API', 'error');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyser';
+            }
+        }
+
+        function showSentimentResult(data) {
+            const sentiment = data.sentiment;
+            const confidence = data.confidence;
+            const confidencePercent = Math.round(confidence * 100);
+
+            const emoji = sentiment === 'POSITIVE' ? '😊' : '😞';
+            const sentimentFr = sentiment === 'POSITIVE' ? 'Positif' : 'Négatif';
+            const className = sentiment === 'POSITIVE' ? 'positive' : 'negative';
+
+            const html = `
+                <div style="text-align: center;">
+                    <h3>${emoji} Sentiment: ${sentimentFr}</h3>
+                    <p><strong>Confiance: ${confidencePercent}%</strong></p>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+                    </div>
+                </div>
+            `;
+
+            showResult(html, className);
+        }
+
+        function showResult(content, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = content;
+            resultDiv.className = `result result-${type}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function updateJsonDisplay(data) {
+            const jsonDiv = document.getElementById('jsonDisplay');
+            jsonDiv.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function toggleJson() {
+            const jsonDiv = document.getElementById('jsonDisplay');
+            if (jsonDiv.style.display === 'none' || !jsonDiv.style.display) {
+                if (lastResponse) {
+                    jsonDiv.style.display = 'block';
+                } else {
+                    showResult('Aucune analyse à afficher', 'error');
+                }
+            } else {
+                jsonDiv.style.display = 'none';
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('jsonDisplay').style.display = 'none';
+            lastResponse = null;
+        }
+
+        // Exemples prédéfinis
+        function loadExample(text) {
+            document.getElementById('textInput').value = text;
+        }
+
+        // Test de connexion au chargement
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('/health');
+                if (response.ok) {
+                    console.log('✅ API accessible');
+                } else {
+                    console.warn('⚠️ API répond mais avec erreur');
+                }
+            } catch (error) {
+                console.error('❌ API non accessible:', error);
+                showResult('⚠️ API non accessible. Vérifiez que le serveur est démarré.', 'error');
+            }
+        });
+
+        // Raccourcis clavier
+        document.getElementById('textInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                analyzeSentiment();
+            }
+        });
+    </script>
+</body>
+</html>
